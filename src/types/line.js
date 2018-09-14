@@ -81,6 +81,11 @@ module.exports = function(Chart) {
 			ret.y = ((view.y1 + view.y2 - height) / 2) + view.labelYAdjust;
 		}
 
+		if (view.labelRotate) {
+			ret.x = ret.x + (width / 2) - padWidth;
+			ret.y = ret.y - (height * 2) - padHeight;
+		}		
+		
 		return ret;
 	}
 
@@ -152,6 +157,7 @@ module.exports = function(Chart) {
 			model.labelYAdjust = options.label.yAdjust;
 			model.labelEnabled = options.label.enabled;
 			model.labelContent = options.label.content;
+			model.labelRotate = options.label.rotate;
 
 			ctx.font = chartHelpers.fontString(model.labelFontSize, model.labelFontStyle, model.labelFontFamily);
 			var textWidth = ctx.measureText(model.labelContent).width;
@@ -234,13 +240,17 @@ module.exports = function(Chart) {
 				ctx.clip();
 
 				ctx.fillStyle = view.labelBackgroundColor;
+				
+				var drawWidth = view.labelRotate ? view.labelHeight : view.labelWidth;
+				var drawHeight = view.labelRotate ? view.labelWidth : view.labelHeight;
+				
 				// Draw the tooltip
 				chartHelpers.drawRoundedRectangle(
 					ctx,
 					view.labelX, // x
 					view.labelY, // y
-					view.labelWidth, // width
-					view.labelHeight, // height
+					drawWidth, // width
+					drawHeight, // height
 					view.labelCornerRadius // radius
 				);
 				ctx.fill();
@@ -254,11 +264,11 @@ module.exports = function(Chart) {
 				ctx.fillStyle = view.labelFontColor;
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'middle';
-				ctx.fillText(
-					view.labelContent,
-					view.labelX + (view.labelWidth / 2),
-					view.labelY + (view.labelHeight / 2)
-				);
+				ctx.translate(view.labelX + (drawWidth / 2), view.labelY + (drawHeight / 2));
+
+				if (view.labelRotate) ctx.rotate(-90*Math.PI/180);
+				
+				ctx.fillText(view.labelContent, 0, 0);
 			}
 
 			ctx.restore();
