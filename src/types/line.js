@@ -81,6 +81,11 @@ module.exports = function(Chart) {
 			ret.y = ((view.y1 + view.y2 - height) / 2) + view.labelYAdjust;
 		}
 
+		if (view.labelRotate) {
+			ret.x = ret.x + (width / 2) - padWidth;
+			ret.y = ret.y - (height * 2) - padHeight;
+		}		
+		
 		return ret;
 	}
 
@@ -157,21 +162,11 @@ module.exports = function(Chart) {
 			ctx.font = chartHelpers.fontString(model.labelFontSize, model.labelFontStyle, model.labelFontFamily);
 			var textWidth = ctx.measureText(model.labelContent).width;
 			var textHeight = ctx.measureText('M').width;
-			
 			var labelPosition = calculateLabelPosition(model, textWidth, textHeight, model.labelXPadding, model.labelYPadding);
-
-			var width = textWidth + (2 * model.labelXPadding);
-			var height = textHeight + (2 * model.labelYPadding);
-			
-			if (model.labelRotate) {
-				labelPosition.x = labelPosition.x + (width / 2) - (model.labelXPadding * 2);
-				labelPosition.y = labelPosition.y - (height) - (model.labelYPadding);					
-			}
-
 			model.labelX = labelPosition.x - model.labelXPadding;
 			model.labelY = labelPosition.y - model.labelYPadding;
-			model.labelWidth = model.labelRotate ? height : width;
-			model.labelHeight = model.labelRotate ? width : height;
+			model.labelWidth = textWidth + (2 * model.labelXPadding);
+			model.labelHeight = textHeight + (2 * model.labelYPadding);
 			
 			model.borderColor = options.borderColor;
 			model.borderWidth = options.borderWidth;
@@ -245,13 +240,17 @@ module.exports = function(Chart) {
 				ctx.clip();
 
 				ctx.fillStyle = view.labelBackgroundColor;
+				
+				var drawWidth = view.labelRotate ? view.labelHeight : view.labelWidth;
+				var drawHeight = view.labelRotate ? view.labelWidth : view.labelHeight;
+				
 				// Draw the tooltip
 				chartHelpers.drawRoundedRectangle(
 					ctx,
 					view.labelX, // x
 					view.labelY, // y
-					view.labelWidth, // width
-					view.labelHeight, // height
+					drawWidth, // width
+					drawHeight, // height
 					view.labelCornerRadius // radius
 				);
 				ctx.fill();
@@ -265,7 +264,7 @@ module.exports = function(Chart) {
 				ctx.fillStyle = view.labelFontColor;
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'middle';
-				ctx.translate(view.labelX + (view.labelWidth / 2), view.labelY + (view.labelHeight / 2));
+				ctx.translate(view.labelX + (drawWidth / 2), view.labelY + (drawHeight / 2));
 
 				if (view.labelRotate) ctx.rotate(-90*Math.PI/180);
 				
