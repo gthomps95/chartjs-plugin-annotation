@@ -152,16 +152,27 @@ module.exports = function(Chart) {
 			model.labelYAdjust = options.label.yAdjust;
 			model.labelEnabled = options.label.enabled;
 			model.labelContent = options.label.content;
+			model.labelRotate = options.label.rotate;
 
 			ctx.font = chartHelpers.fontString(model.labelFontSize, model.labelFontStyle, model.labelFontFamily);
 			var textWidth = ctx.measureText(model.labelContent).width;
 			var textHeight = ctx.measureText('M').width;
+			
 			var labelPosition = calculateLabelPosition(model, textWidth, textHeight, model.labelXPadding, model.labelYPadding);
+
+			var width = textWidth + (2 * model.labelXPadding);
+			var height = textHeight + (2 * model.labelYPadding);
+			
+			if (model.labelRotate) {
+				labelPosition.x = labelPosition.x + (width / 2) - (model.labelXPadding * 2);
+				labelPosition.y = labelPosition.y - (height) - (model.labelYPadding);					
+			}
+
 			model.labelX = labelPosition.x - model.labelXPadding;
 			model.labelY = labelPosition.y - model.labelYPadding;
-			model.labelWidth = textWidth + (2 * model.labelXPadding);
-			model.labelHeight = textHeight + (2 * model.labelYPadding);
-
+			model.labelWidth = model.labelRotate ? height : width;
+			model.labelHeight = model.labelRotate ? width : height;
+			
 			model.borderColor = options.borderColor;
 			model.borderWidth = options.borderWidth;
 			model.borderDash = options.borderDash || [];
@@ -254,11 +265,11 @@ module.exports = function(Chart) {
 				ctx.fillStyle = view.labelFontColor;
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'middle';
-				ctx.fillText(
-					view.labelContent,
-					view.labelX + (view.labelWidth / 2),
-					view.labelY + (view.labelHeight / 2)
-				);
+				ctx.translate(view.labelX + (view.labelWidth / 2), view.labelY + (view.labelHeight / 2));
+
+				if (view.labelRotate) ctx.rotate(-90*Math.PI/180);
+				
+				ctx.fillText(view.labelContent, 0, 0);
 			}
 
 			ctx.restore();
